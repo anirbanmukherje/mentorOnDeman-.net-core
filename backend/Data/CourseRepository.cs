@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MentorOnDemand.Data
 {
-    public class CourseRepository: IRepository
+    public class CourseRepository : IRepository
     {
         MentorOnDemandContext context;
         public CourseRepository(MentorOnDemandContext context)
@@ -34,24 +34,7 @@ namespace MentorOnDemand.Data
             }
         }
 
-        public bool AddEnrolledCourses(EnrolledCourse enrolledCourse)
-        {
-            try
-            {
-                context.EnrolledCourses.Add(enrolledCourse);
-                int result = context.SaveChanges();
-                if (result > 0)
-                {
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception e)
-            {
-
-                throw;
-            }
-        }
+        
 
         public bool DeleteCourse(Course course)
         {
@@ -72,7 +55,7 @@ namespace MentorOnDemand.Data
             }
         }
 
-        
+
 
         public Course GetCourse(int id)
         {
@@ -84,10 +67,7 @@ namespace MentorOnDemand.Data
             return this.context.Courses.ToList();
         }
 
-        public IEnumerable<EnrolledCourse> GetEnrolledCourses()
-        {
-            return this.context.EnrolledCourses.ToList();
-        }
+        
 
         public List<Course> SearchCourse(string criteria)
         {
@@ -117,20 +97,20 @@ namespace MentorOnDemand.Data
             }
         }
         public IEnumerable<UserDto> GetMentorsList()
-      {
+        {
             var mentor = from a in context.MODUsers
                          join ma in context.UserRoles on a.Id equals ma.UserId
                          where ma.RoleId == "2"
                          select new UserDto
                          {
                              id = a.Id,
-                             
+
                              Experience = a.Experience,
                              Firstname = a.FirstName,
                              Lastname = a.LastName,
                              Skill = a.Skill,
                              Email = a.Email,
-                             Active=a.Active
+                             Active = a.Active
 
                          };
             return mentor;
@@ -138,21 +118,21 @@ namespace MentorOnDemand.Data
         public IEnumerable<UserDto> GetStudentsList()
         {
             var student = from a in context.MODUsers
-                         join ma in context.UserRoles on a.Id equals ma.UserId
-                         where ma.RoleId == "3"
-                         select new UserDto
-                         {
-                             id = a.Id,
-
-                          
-                             Firstname = a.FirstName,
-                             Lastname = a.LastName,
-                             Email = a.Email,
-                             PhoneNumber=a.PhoneNumber,
-                             Active = a.Active
+                          join ma in context.UserRoles on a.Id equals ma.UserId
+                          where ma.RoleId == "3"
+                          select new UserDto
+                          {
+                              id = a.Id,
 
 
-                         };
+                              Firstname = a.FirstName,
+                              Lastname = a.LastName,
+                              Email = a.Email,
+                              PhoneNumber = a.PhoneNumber,
+                              Active = a.Active
+
+
+                          };
             return student;
         }
         public bool BlockUser(string id)
@@ -180,8 +160,8 @@ namespace MentorOnDemand.Data
                              Lastname = a.LastName,
                              Skill = a.Skill,
                              Email = a.Email,
-                             PhoneNumber=a.PhoneNumber
-                             
+                             PhoneNumber = a.PhoneNumber
+
                          };
             return result.SingleOrDefault();
         }
@@ -197,7 +177,7 @@ namespace MentorOnDemand.Data
                     user.Id = ModUser.id;
                     user.Email = ModUser.Email;
                     user.FirstName = ModUser.FirstName;
-                    user.LastName =ModUser.LastName;
+                    user.LastName = ModUser.LastName;
                     user.PhoneNumber = ModUser.PhoneNumber;
                     user.Skill = ModUser.Skill;
                     user.Experience = ModUser.Experience;
@@ -218,6 +198,152 @@ namespace MentorOnDemand.Data
             }
         }
 
+        public UserDto studentProfileDetails(string email)
+        {
+            var result = from a in context.MODUsers
+                         where a.Email == email
+                         select new UserDto
+                         {
+                             id = a.Id,
+
+                             Firstname = a.FirstName,
+                             Lastname = a.LastName,
+                             Skill = a.Skill,
+                             Email = a.Email,
+                             PhoneNumber = a.PhoneNumber
+
+                         };
+            return result.SingleOrDefault();
+        }
+
+        public bool UpdateStudentDetails(ProfileDto ModUser, string studentId)
+        {
+            try
+            {
+                var user = (from a in context.MODUsers
+                            where a.Id == studentId
+                            select a).SingleOrDefault();
+                if (user != null)
+                {
+                    user.Id = ModUser.id;
+                    user.Email = ModUser.Email;
+                    user.FirstName = ModUser.FirstName;
+                    user.LastName = ModUser.LastName;
+                    user.PhoneNumber = ModUser.PhoneNumber;
+                    user.Skill = ModUser.Skill;
+                    user.Experience = ModUser.Experience;
+
+                    context.SaveChanges();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            throw new NotImplementedException();
+        }
+
+
+
+        public bool ChangeCourseStatus(EnrolledCourse enrolledCourse, string UserEmail)
+        {
+            try
+            {
+                if (UserEmail == enrolledCourse.MentorEmail)
+                {
+                    if (enrolledCourse.Status == "Requested")
+                    {
+                        enrolledCourse.Status = "Request Accepted";
+                    }
+                    else if (enrolledCourse.Status == "In Progress")
+                    {
+                        enrolledCourse.Status = "Completed";
+                    }
+                    context.EnrolledCourses.Update(enrolledCourse);
+                    int result = context.SaveChanges();
+                    if (result > 0)
+                    {
+                        return true;
+                    }
+                }
+                else if (UserEmail == enrolledCourse.StudentEmail && enrolledCourse.Status == "Request Accepted")
+                {
+                    enrolledCourse.Status = "In Progress";
+                    context.EnrolledCourses.Update(enrolledCourse);
+                    int result = context.SaveChanges();
+                    if (result > 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+        }
+
+        public List<EnrolledCourse> GetEnrolledCoursesByMentor(string modelEmail)
+        {
+            var result = from c in context.EnrolledCourses
+                         where c.MentorEmail == modelEmail
+                         select c;
+            return result.ToList();
+        }
+
+        public List<EnrolledCourse> GetEnrolledCoursesByStudent(string modelEmail)
+        {
+            var result = from c in context.EnrolledCourses
+                         where c.StudentEmail == modelEmail
+                         select c;
+            return result.ToList();
+        }
+        public IEnumerable<EnrolledCourse> GetEnrolledCourses()
+        {
+
+            return this.context.EnrolledCourses.ToList();
+        }
+
+        public bool AddEnrolledCourses(EnrolledCourse enrolledCourse)
+        {
+            try
+            {
+                var result1 = from c in context.EnrolledCourses
+                              where c.StudentEmail == enrolledCourse.StudentEmail
+                                    && c.Name == enrolledCourse.Name
+                              select c;
+                if (result1.Count() == 0)
+                {
+                    context.EnrolledCourses.Add(enrolledCourse);
+                    int result = context.SaveChanges();
+                    if (result > 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+
+                throw;
+            }
+        }
 
     }
 }
+
+
+
+

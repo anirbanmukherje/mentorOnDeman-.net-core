@@ -35,6 +35,11 @@ namespace MentorOnDemand.Models
         [MaxLength(50)]
         public string StudentEmail { get; set; }
 
+        [Required]
+        [MaxLength(50)]
+        public string Status { get; set; }
+
+
 
 
     }

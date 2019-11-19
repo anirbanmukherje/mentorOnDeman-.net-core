@@ -129,6 +129,31 @@ namespace MentorOnDemand.Controller
         }
 
 
+        [HttpGet("studentProfile/{email}")]
+        public IActionResult ProfileDetails(string email)
+        {
+            var result = repository.studentProfileDetails(email);
+            return Ok(result);
+        }
+
+
+
+        [HttpPut("studentProfile/{studentId}")]
+        public IActionResult UpdateStudentDetails(string studentId, [FromBody] ProfileDto studentData)
+        {
+            if (ModelState.IsValid)
+            {
+                bool result = repository.UpdateStudentDetails(studentData, studentId);
+                if (result)
+                {
+                    return Created("UpdatedCourse", null);
+                }
+            }
+            return BadRequest(ModelState);
+        }
+
+
+
 
     }
 }
